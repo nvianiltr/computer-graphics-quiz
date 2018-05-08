@@ -1,0 +1,115 @@
+<!-- Noviani Litriani (2001594623)-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>COMPUTER GRAPHICS' QUIZ</title>
+    <script type="text/javascript" src="babylon.custom.js"></script>
+    <script type="text/javascript" src="initScene.js"></script>
+    <script type="text/javascript" src="material.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<script>
+    var engine, scene, noOfCollision = 0, keyPressedCode = 0;
+
+    window.onkeydown = function (event) {
+        keyPressedCode = event.keyCode;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        createScene();
+        scene.enablePhysics();
+
+        /* GETTING TEXTURE FOR MATERIALS */
+        var grassMaterial = createGrass(scene);
+        var mushroomMaterial = createMushroom(scene);
+        var faceMaterial = createFace(scene);
+
+
+        /* CREATING A GROUND */
+        ground = new BABYLON.Mesh.CreateGround("ground", 100, 100, 1, scene);
+        ground.material = grassMaterial;
+        ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, {
+            mass: 0,
+            restitution: 0.2,
+            friction: 0.2
+        }, scene);
+
+        /* CREATING A PLAYER */
+        var player = new BABYLON.Mesh.CreateBox('box', 5, scene);
+        player.position = new BABYLON.Vector3(30, 2, 0);
+        player.physicsImpostor = new BABYLON.PhysicsImpostor(player, BABYLON.PhysicsImpostor.BoxImpostor, {
+            mass: 1,
+            restitution: 0.5,
+            friction: 0.2
+        }, scene);
+        player.material = faceMaterial;
+
+        /* CREATING A MUSHROOM*/
+        var mushroom = new BABYLON.Mesh.CreateSphere("sphere", 5, 5, scene);
+        mushroom.position = new BABYLON.Vector3(10, 2, 0);
+        mushroom.physicsImpostor = new BABYLON.PhysicsImpostor(mushroom, BABYLON.PhysicsImpostor.BoxImpostor, {
+            mass: 1,
+            restitution: 0.5,
+            friction: 0.2
+        }, scene);
+        mushroom.material = mushroomMaterial;
+
+        player.physicsImpostor.registerOnPhysicsCollide(mushroom.physicsImpostor, function (main, collided) {
+            if (noOfCollision == 0) {
+                player.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+                setTimeout(function() {
+                    noOfCollision += 1;
+                },3000);
+            }
+            else {
+                setTimeout(() => {
+                    player.dispose();
+               }, 1);
+            }
+        });
+
+        function makeMushroomMovesToPlayer(){
+            var newX = (player.position.x - mushroom.position.x) / 100;
+            var newZ = (player.position.z - mushroom.position.z) / 100;
+            mushroom.position.x += newX;
+            mushroom.position.z += newZ;
+        }
+
+        function setPlayerPosition(){
+            if (keyPressedCode == null) {
+                player.position.x = player.position.x;
+            }
+            // press a - going left
+            else if (keyPressedCode == 65) {
+                player.position.x = player.position.x + 2;
+            }
+            // press w - going up
+            else if (keyPressedCode == 87) {
+                player.position.z = player.position.z - 2;
+            }
+            // press d - going right
+            else if (keyPressedCode == 68) {
+                player.position.x = player.position.x - 2;
+            }
+            // press s - going down
+            else if (keyPressedCode == 83) {
+                player.position.z = player.position.z + 2;
+            }
+            keyPressedCode = 0;
+        }
+
+        engine.runRenderLoop(function () {
+           makeMushroomMovesToPlayer();
+           setPlayerPosition();
+           scene.render();
+        });
+    });
+
+</script>
+</body>
+</html>
